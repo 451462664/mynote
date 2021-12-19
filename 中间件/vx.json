@@ -14,10 +14,10 @@
     ],
     "folders": [
         {
-            "name": "AxonFramework"
+            "name": "Elasticsearch"
         },
         {
-            "name": "Elasticsearch"
+            "name": "DBunit"
         }
     ],
     "id": "6",
