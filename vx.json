@@ -1,0 +1,55 @@
+{
+    "created_time": "2021-12-21T01:44:32Z",
+    "files": [
+        {
+            "attachment_folder": "",
+            "created_time": "2021-12-21T01:46:33Z",
+            "id": "14",
+            "modified_time": "2021-12-21T01:46:33Z",
+            "name": "临时记录.md",
+            "signature": "99992773669369",
+            "tags": [
+            ]
+        },
+        {
+            "attachment_folder": "",
+            "created_time": "2021-12-21T01:46:34Z",
+            "id": "15",
+            "modified_time": "2021-12-21T01:46:34Z",
+            "name": "计划.md",
+            "signature": "72273054740986",
+            "tags": [
+            ]
+        }
+    ],
+    "folders": [
+        {
+            "name": "公司"
+        },
+        {
+            "name": "中间件"
+        },
+        {
+            "name": "框架"
+        },
+        {
+            "name": "内功"
+        },
+        {
+            "name": "个人纪录"
+        },
+        {
+            "name": "MySql"
+        },
+        {
+            "name": "Java"
+        },
+        {
+            "name": "DevOps"
+        }
+    ],
+    "id": "1",
+    "modified_time": "2021-12-21T01:44:32Z",
+    "signature": "177733710208",
+    "version": 3
+}
