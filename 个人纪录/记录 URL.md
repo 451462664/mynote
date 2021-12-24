@@ -24,7 +24,8 @@ https://www.codeprj.com/blog/88f1751.html
 
 ### 记录 URL
 
-自考https://zk.zjzs.net/Index/index.aspx
+idea 设置 https://mp.weixin.qq.com/s/LxJZEO6i3PT7iJeDRMg05A
+自考 https://zk.zjzs.net/Index/index.aspx
 球鞋相关头像 https://www.sohu.com/a/229734289_430941
 C 清理 https://www.zhihu.com/question/51654630
 

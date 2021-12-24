@@ -15,17 +15,14 @@ SHOW VARIABLES LIKE 'transaction_isolation';
 # 查看长事务
 SELECT * FROM information_schema.innodb_trx WHERE TIME_TO_SEC(TIMEDIFF(NOW(),trx_started))>60;
 
-
-SELECT * 
-FROM BASKETBALL_COURT
-WHERE PLAYER BETWEEN 0 AND 12
-AND LIGHT IS NOT NULL;
-
-+ - - - + - - - +
-| NAME  |PLAYER |
-+ - - - + - - - +
-| NULL  | NULL  |
-+ - - - + - - - +
+# LOAD-DATA 导入 csv 数据
+LOAD DATA LOCAL INFILE '/Users/1.csv'
+INTO TABLE safety_center.oil_compensation
+FIELDS TERMINATED BY ','
+ENCLOSED BY '"'
+LINES TERMINATED BY '\n'
+IGNORE 1
+LINES(tid, gpsdate, longitude, latitude, speed, standardmileage, receivedate, ispatch, oilvalue);
 
 # order by
 select * from product order by 字段A desc,字段B asc;
