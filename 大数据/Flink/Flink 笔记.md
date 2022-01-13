@@ -4,7 +4,7 @@
 
 ### 第 1 节 什么是 Flink
 
-​		Apache Flink是一个框架和分布式处理引擎，用于对无界和有界数据流进行有状态计算。Flink被设计在所有常见的集群环境中运行，以内存执行速度和任意规模来执行计算。
+​Apache Flink是一个框架和分布式处理引擎，用于对无界和有界数据流进行有状态计算。Flink被设计在所有常见的集群环境中运行，以内存执行速度和任意规模来执行计算。
 
 * Flink起源于2008年柏林理工大学的研究性项目Stratosphere
 
@@ -63,7 +63,7 @@ Flink 是一个开源的流处理框架，它具有以下特点
 
 * Deploy层：
   * 可以启动单个JVM，让Flink以Local模式运行
-  * Flink也可以以Standalone 集群模式运行，同时也支持Flink ON YARN，Flink应用直接提交到YARN上面运行
+  * Flink也可以以Standalone集群模式运行，同时也支持Flink ON YARN，Flink应用直接提交到YARN上面运行
   * Flink还可以运行在GCE（谷歌云服务）和EC2（亚马逊云服务）
 * Core层（Runtime）：在Runtime之上提供了两套核心的API，DataStream API（流处理）和DataSet API（批处理）
 * APIs & Libraries层：核心API之上又扩展了一些高阶的库和API
@@ -92,7 +92,7 @@ Flink 是一个开源的流处理框架，它具有以下特点
 
 ### 第 5 节 Flink 处理模型：流处理与批处理
 
-​		Flink 专注于无限流处理，有限流处理是无限流处理的一种特殊情况
+Flink 专注于无限流处理，有限流处理是无限流处理的一种特殊情况
 
 **无限流处理：**
 
@@ -107,11 +107,11 @@ Flink 是一个开源的流处理框架，它具有以下特点
 
   Flink封装了DataStream API进行流处理，封装了DataSet API进行批处理。
 
-  同时，Flink也是一个批流一体的处理引擎，提供了Table API / SQL统一了批处理和流处理
+  同时，Flink也是一个批流一体的处理引擎，提供了Table API/SQL统一了批处理和流处理
 
 ### 第 6 节 流处理引擎的技术选型
 
-​		市面上的流处理引擎不止Flink一种，其他的比如Storm、SparkStreaming、Trident等，实际应用时如何进行选型，给大家一些建议参考
+​市面上的流处理引擎不止Flink一种，其他的比如Storm、SparkStreaming、Trident等，实际应用时如何进行选型，给大家一些建议参考
 
 * 流数据要进行状态管理，选择使用Trident、Spark Streaming或者Flink
 * 消息投递需要保证At-least-once（至少一次）或者Exactly-once（仅一次）不能选择Storm
@@ -121,20 +121,19 @@ Flink 是一个开源的流处理框架，它具有以下特点
 
 ## 第二部分 Flink快速应用
 
-​		通过一个单词统计的案例，快速上手应用Flink，进行流处理（Streaming）和批处理（Batch）
+通过一个单词统计的案例，快速上手应用Flink，进行流处理（Streaming）和批处理（Batch）
 
 ### 第 1 节 单词统计案例（批数据）
 
 #### 1.1 需求
 
-​		统计一个文件中各个单词出现的次数，把统计结果输出到文件
+统计一个文件中各个单词出现的次数，把统计结果输出到文件
 
 #### 1.2 代码实现
 
   * 引入依赖
 
-    ```xml
-    
+```xml
     <!--flink核心包-->
     <dependency>
         <groupId>org.apache.flink</groupId>
@@ -147,20 +146,20 @@ Flink 是一个开源的流处理框架，它具有以下特点
         <artifactId>flink-streaming-java_2.12</artifactId>
         <version>1.7.2</version>
         <scope>provided</scope>
-    </dependency>	
-    ```
+    </dependency>
+```
 
   * Java程序
 
-    ```java
+```java
     package com.lagou.edu.batch;
-    
+
     import org.apache.flink.api.common.functions.FlatMapFunction;
     import org.apache.flink.api.java.DataSet;
     import org.apache.flink.api.java.ExecutionEnvironment;
     import org.apache.flink.api.java.tuple.Tuple2;
     import org.apache.flink.util.Collector;
-    
+
     /**
      * 单词统计（批数据处理）
      */
@@ -179,8 +178,7 @@ Flink 是一个开源的流处理框架，它具有以下特点
             // 触发执行程序
             executionEnvironment.execute("wordcount batch process");
         }
-    
-    
+
         static class LineSplitter implements FlatMapFunction<String, Tuple2<String,Integer>> {
             @Override
             public void flatMap(String line, Collector<Tuple2<String, Integer>> collector) throws Exception {
@@ -190,23 +188,25 @@ Flink 是一个开源的流处理框架，它具有以下特点
             }
         }
     }
-    ```
-
-
-
 ```
-<properties>    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>    <maven.compiler.source>11</maven.compiler.source>    <maven.compiler.target>11</maven.compiler.target></properties>
+
+```xml
+    <properties>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <maven.compiler.source>11</maven.compiler.source>
+        <maven.compiler.target>11</maven.compiler.target>
+    </properties>
 ```
 
 ### 第 2 节 单词统计案例（流数据）
 
 nc
 
- netcat:
+netcat:
 
 #### 2.1 需求
 
-​		Socket模拟实时发送单词，使用Flink实时接收数据，对指定时间窗口内（如5s）的数据进行聚合统计，每隔1s汇总计算一次，并且把时间窗口内计算结果打印出来。
+Socket模拟实时发送单词，使用Flink实时接收数据，对指定时间窗口内（如5s）的数据进行聚合统计，每隔1s汇总计算一次，并且把时间窗口内计算结果打印出来。
 
 #### 2.2 代码实现
 
@@ -222,7 +222,7 @@ import org.apache.flink.streaming.api.windowing.time.Time;
 import org.apache.flink.util.Collector;
 
 /**
- * 	Socket模拟实时发送单词，使用Flink实时接收数据，对指定时间窗口内（如5s）的数据进行聚合统计，每隔1s汇总计算一次，并且把时间窗口内计算结果打印出来。
+ * Socket模拟实时发送单词，使用Flink实时接收数据，对指定时间窗口内（如5s）的数据进行聚合统计，每隔1s汇总计算一次，并且把时间窗口内计算结果打印出来。
  teacher2 ip : 113.31.105.128
  */
 public class WordCount {
@@ -258,7 +258,7 @@ public class WordCount {
 }
 ```
 
-​	  Flink程序开发的流程总结如下：
+Flink程序开发的流程总结如下：
 
 1）获得一个执行环境
 
@@ -278,47 +278,47 @@ public class WordCount {
 
 <img src="D:/vnote/mynote/images/Flink讲义.assets/image-20200731000902936.png" alt="image-20200731000902936" style="zoom:50%;" />
 
-​		Flink是非常经典的Master/Slave结构实现，JobManager是Master，TaskManager是Slave。
+Flink是非常经典的Master/Slave结构实现，JobManager是Master，TaskManager是Slave。
 
 * JobManager处理器（Master）
   * 协调分布式执行，它们用来调度task，协调检查点(CheckPoint)，协调失败时恢复等
-  
+
   task：任务。同一个阶段的多个SubTask的集合
-  
+
     SubTask：
-  
+
     电商：
-  
+
   * Flink运行时至少存在一个master处理器，如果配置高可用模式则会存在多个master处理器，它们其中有一个是leader，而其他的都是standby。
-  
+
 * TaskManager处理器（Slave）
 
-  ​		也称之为Worker
+  ​也称之为Worker
 
   * 主要职责是从JobManager处接收任务, 并部署和启动任务, 接收上游的数据并处理
-  * Task Manager 是在 JVM 中的一个或多个线程中执行任务的工作节点
+  * Task Manager 是在JVM中的一个或多个线程中执行任务的工作节点
 
 ### 第 2 节 Flink运行架构
 
 #### 2.1 Flink程序结构
 
-​		Flink程序的基本构建块是**流**和**转换**（请注意，Flink的DataSet API中使用的DataSet也是内部流 ）。从概念上讲，流是（可能永无止境的）数据记录流，而转换是将一个或多个流输入，并产生一个或多个输出流。
+Flink程序的基本构建块是**流**和**转换**（请注意，Flink的DataSet API中使用的DataSet也是内部流）。从概念上讲，流是（可能永无止境的）数据记录流，而转换是将一个或多个流输入，并产生一个或多个输出流。
 
 <img src="D:/vnote/mynote/images/Flink讲义.assets/image-20200731001906709.png" alt="image-20200731001906709" style="zoom: 67%;" />
 
-​		上图表述了Flink的应用程序结构，有Source（源头）、Transformation（转换）、Sink（接收器）三个重要组成部分
+​上图表述了Flink的应用程序结构，有Source（源头）、Transformation（转换）、Sink（接收器）三个重要组成部分
 
 * Source
 
-  ​		数据源，定义Flink从哪里加载数据，Flink 在流处理和批处理上的 source 大概有 4 类：基于本地集合的 source、基于文件的 source、基于网络套接字的 source、自定义的 source。自定义的 source 常见的有 Apache kafka、RabbitMQ 等。
+数据源，定义Flink从哪里加载数据，Flink 在流处理和批处理上的 source 大概有 4 类：基于本地集合的 source、基于文件的 source、基于网络套接字的 source、自定义的 source。自定义的 source 常见的有 Apache kafka、RabbitMQ 等。
 
 * Transformation
 
-  ​		数据转换的各种操作，也称之为算子，有 Map / FlatMap / Filter / KeyBy / Reduce  / Window等，可以将数据转换计算成你想要的数据。
+数据转换的各种操作，也称之为算子，有Map/FlatMap/Filter/KeyBy/Reduce/Window等，可以将数据转换计算成你想要的数据。
 
 * Sink
 
-  ​		接收器，Flink 将转换计算后的数据发送的地点 ，定义了结果数据的输出方向，Flink 常见的 Sink 大概有如下几类：写入文件、打印出来、写入 socket 、自定义的 sink 。自定义的 sink 常见的有 Apache kafka、RabbitMQ、MySQL、ElasticSearch、Apache Cassandra、HDFS等。	
+接收器，Flink将转换计算后的数据发送的地点，定义了结果数据的输出方向，Flink常见的Sink大概有如下几类：写入文件、打印出来、写入socket、自定义的sink。自定义的sink常见的有Apache kafka、RabbitMQ、MySQL、ElasticSearch、Apache Cassandra、HDFS等。
 
 #### 2.2 Task和SubTask
 
@@ -326,46 +326,46 @@ public class WordCount {
 
 * SubTask（子任务）
 
-  ​		SubTask 是 Flink 中任务最小执行单元，是一个 Java 类的实例，这个 Java 类中有属性和方法，完成具体的计算逻辑
+SubTask是Flink中任务最小执行单元，是一个Java类的实例，这个Java类中有属性和方法，完成具体的计算逻辑。
 
-  ​		比如一个执行操作map，分布式的场景下会在多个线程中同时执行，每个线程中执行的都叫做一个SubTask（在2.3节的图中也能够体现）
+比如一个执行操作map，分布式的场景下会在多个线程中同时执行，每个线程中执行的都叫做一个SubTask（在2.3节的图中也能够体现）
 
 #### 2.3 Operator chain(操作器链)
 
-​		Flink的所有操作都称之为Operator，客户端在提交任务的时候会对Operator进行优化操作，能进行合并的Operator会被合并为一个Operator，合并后的Operator称为Operator chain，实际上就是一个执行链，每个执行链会在TaskManager上一个独立的线程中执行。shuffle
+Flink的所有操作都称之为Operator，客户端在提交任务的时候会对Operator进行优化操作，能进行合并的Operator会被合并为一个Operator，合并后的Operator称为Operator chain，实际上就是一个执行链，每个执行链会在TaskManager上一个独立的线程中执行。shuffle
 
 ![image-20200731003518007](D:/vnote/mynote/images/Flink讲义.assets/image-20200731003518007.png)
 
 #### 2.5 任务槽和槽共享
 
-​		任务槽也叫做task-slot、槽共享也叫做slot sharing
+任务槽也叫做task-slot、槽共享也叫做slot sharing
 
 ![image-20200731003728504](D:/vnote/mynote/images/Flink讲义.assets/image-20200731003728504.png)
 
-·		每个TaskManager是一个JVM的进程, 可以在不同的线程中执行一个或多个子任务。 
+·每个TaskManager是一个JVM的进程, 可以在不同的线程中执行一个或多个子任务。
 
-​		为了控制一个worker能接收多少个task。worker通过task slot来进行控制（一个worker至少有一个task slot）
+为了控制一个worker能接收多少个task。worker通过task slot来进行控制（一个worker至少有一个task slot）
 
 * 任务槽
 
-  ​		每个task slot表示TaskManager拥有资源的一个固定大小的子集。 一般来说:我们分配槽的个数都是和CPU的核数相等,比如6核,那么就分配6个槽.
+每个task slot表示TaskManager拥有资源的一个固定大小的子集。 一般来说:我们分配槽的个数都是和CPU的核数相等,比如6核,那么就分配6个槽.
 
-  ​		Flink将进程的内存进行了划分到多个Slot中。假设一个TaskManager机器有3个slot，那么每个slot占有1/3的内存（平分）。
+Flink将进程的内存进行了划分到多个Slot中。假设一个TaskManager机器有3个slot，那么每个slot占有1/3的内存（平分）。
 
-  ​		内存被划分到不同的slot之后可以获得如下好处: 
+内存被划分到不同的slot之后可以获得如下好处:
 
   * TaskManager最多能同时并发执行的任务是可以控制的，那就是3个，因为不能超过slot的数量
   * slot有独占的内存空间，这样在一个TaskManager中可以运行多个不同的作业，作业之间不受影响
 
 * 槽共享
 
-  ​		默认情况下，Flink允许子任务subtast（map[1]  map[2] keyby[1]  keyby[2] 共享插槽，即使它们是不同任务的子任务，只要它们来自同一个作业。结果是一个槽可以保存作业的整个管道。
+默认情况下，Flink允许子任务subtast（map[1] map[2] keyby[1] keyby[2] 共享插槽，即使它们是不同任务的子任务，只要它们来自同一个作业。结果是一个槽可以保存作业的整个管道。
 
   ![image-20200731004113146](D:/vnote/mynote/images/Flink讲义.assets/image-20200731004113146.png)
 
 ## 第四部分 Flink安装和部署
 
-​		Flink支持多种安装模式
+Flink支持多种安装模式
 
 *  local（本地）：单机模式，一般本地开发调试使用
 *  StandAlone 独立模式：Flink自带集群，自己管理资源调度，生产环境也会有所应用
@@ -438,38 +438,37 @@ Step8、查看结果文件
 
 **打jar包插件：**
 
-```
+```xml
 <build>
-        <plugins>
-            <!-- 打jar插件 -->
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-shade-plugin</artifactId>
-                <version>2.4.3</version>
-                <executions>
-                    <execution>
-                        <phase>package</phase>
-                        <goals>
-                            <goal>shade</goal>
-                        </goals>
-                        <configuration>
-                            <filters>
-                                <filter>
-                                    <artifact>*:*</artifact>
-                                    <excludes>
-                                        <exclude>META-INF/*.SF</exclude>
-                                        <exclude>META-INF/*.DSA</exclude>
-                                        <exclude>META-INF/*.RSA</exclude>
-                                    </excludes>
-                                </filter>
-                            </filters>
-                        </configuration>
-                    </execution>
-                </executions>
-            </plugin>
-
-        </plugins>
-    </build>
+    <plugins>
+        <!-- 打jar插件 -->
+        <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-shade-plugin</artifactId>
+            <version>2.4.3</version>
+            <executions>
+                <execution>
+                    <phase>package</phase>
+                    <goals>
+                        <goal>shade</goal>
+                    </goals>
+                    <configuration>
+                        <filters>
+                            <filter>
+                                <artifact>*:*</artifact>
+                                <excludes>
+                                    <exclude>META-INF/*.SF</exclude>
+                                    <exclude>META-INF/*.DSA</exclude>
+                                    <exclude>META-INF/*.RSA</exclude>
+                                </excludes>
+                            </filter>
+                        </filters>
+                    </configuration>
+                </execution>
+            </executions>
+        </plugin>
+    </plugins>
+</build>
 ```
 
 #### 1.4 StandAlone模式部署
@@ -541,15 +540,12 @@ l 解释
 
 (2)直接在YARN上提交运行Flink作业(Run a Flink job on YARN)
 
-
-
 bin/flink run -m yarn-cluster -yn 2 -yjm 1024 -ytm 1024 /export/servers/flink/examples/batch/WordCount.jar
 
 \# -m  jobmanager的地址
 
 \# -yn 表示TaskManager的个数 
 
-  
 
 停止yarn-cluster：
 
@@ -563,7 +559,7 @@ rm -rf /tmp/.yarn-properties-root
 
 ### 第 1 节 Flink DataStream常用API
 
-​		DataStream API主要分为3块：DataSource、Transformation、Sink
+DataStream API主要分为3块：DataSource、Transformation、Sink
 
 * DataSource是程序的数据源输入，可以通过StreamExecutionEnvironment.addSource(sourceFuntion)为程序添加一个数据源
 * Transformation是具体的操作，它对一个或多个输入数据源进行计算处理，比如Map、FlatMap和Filter等操作
@@ -571,11 +567,11 @@ rm -rf /tmp/.yarn-properties-root
 
 #### 1.1 DataSource
 
-​		Flink针对DataStream提供了大量已经实现的DataSource（数据源接口），比如如下4种
+Flink针对DataStream提供了大量已经实现的DataSource（数据源接口），比如如下4种
 
 1）基于文件
 
-​		readTextFile(path)
+readTextFile(path)
 
 读取文本文件，文件遵循TextInputFormat逐行读取规则并返回
 
@@ -587,44 +583,40 @@ b、Window配置hadoop
 
 c、依赖：
 
-```
- <dependency>
-            <groupId>org.apache.flink</groupId>
-            <artifactId>flink-hadoop-compatibility_2.11</artifactId>
-            <version>1.7.2</version>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.hadoop</groupId>
-            <artifactId>hadoop-common</artifactId>
-            <version>2.7.2</version>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.hadoop</groupId>
-            <artifactId>hadoop-hdfs</artifactId>
-            <version>2.7.2</version>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.hadoop</groupId>
-            <artifactId>hadoop-client</artifactId>
-            <version>2.7.2</version>
-        </dependency>
+```xml
+<dependency>
+    <groupId>org.apache.flink</groupId>
+    <artifactId>flink-hadoop-compatibility_2.11</artifactId>
+    <version>1.7.2</version>
+</dependency>
+<dependency>
+    <groupId>org.apache.hadoop</groupId>
+    <artifactId>hadoop-common</artifactId>
+    <version>2.7.2</version>
+</dependency>
+<dependency>
+    <groupId>org.apache.hadoop</groupId>
+    <artifactId>hadoop-hdfs</artifactId>
+    <version>2.7.2</version>
+</dependency>
+<dependency>
+    <groupId>org.apache.hadoop</groupId>
+    <artifactId>hadoop-client</artifactId>
+    <version>2.7.2</version>
+</dependency>
 ```
 
 2）基于Socket
 
-​		socketTextStream
+socketTextStream
 
 从Socket中读取数据，元素可以通过一个分隔符分开
 
 3）基于集合
 
-​		fromCollection(Collection)
+fromCollection(Collection)
 
 通过Java的Collection集合创建一个数据流，集合中的所有元素必须是相同类型的
-
-
-
-
 
 如果满足以下条件，Flink将数据类型识别为POJO类型（并允许“按名称”字段引用）：
 
@@ -661,8 +653,6 @@ public class StreamFromCollection {
         });
         filtered.print();
         env.execute();
-
-
     }
 
     public static class People{
@@ -704,9 +694,9 @@ public class StreamFromCollection {
 
 4）自定义输入
 
-​		addSource可以实现读取第三方数据源的数据
+addSource可以实现读取第三方数据源的数据
 
-​		Flink也提供了一批内置的Connector（连接器），如下表列了几个主要的
+Flink也提供了一批内置的Connector（连接器），如下表列了几个主要的
 
 | 连接器               | 是否提供Source支持 | 是否提供Sink支持 |
 | -------------------- | ------------------ | ---------------- |
@@ -719,17 +709,17 @@ Kafka连接器
 
 a、依赖：
 
-```
+```xml
 <dependency>
-            <groupId>org.apache.flink</groupId>
-            <artifactId>flink-connector-kafka_2.11</artifactId>
-            <version>1.7.2</version>
-        </dependency>
+    <groupId>org.apache.flink</groupId>
+    <artifactId>flink-connector-kafka_2.11</artifactId>
+    <version>1.7.2</version>
+</dependency>
 ```
 
 b、代码：
 
-```
+```java
 import org.apache.flink.api.java.tuple.Tuple2;
 import org.apache.flink.streaming.api.datastream.DataStreamSource;
 import org.apache.flink.streaming.api.datastream.SingleOutputStreamOperator;
@@ -800,11 +790,11 @@ Flink针对DataStream提供了大量的已经实现的算子
 
 创建自定义数据源（流）   1秒钟产生一个新数据
 
-​	-----实现SourceFunction<>接口，tip:SourceFuntion和SourceContext需要指明泛型，否则报InvalidTypesException异常
+-----实现SourceFunction<>接口，tip:SourceFuntion和SourceContext需要指明泛型，否则报InvalidTypesException异常
 
 创建自定义分区，奇偶分区
 
-​	-----实现Partitioner<>接口
+-----实现Partitioner<>接口
 
 #### 1.3 Sink
 
@@ -822,12 +812,12 @@ Flink针对DataStream提供了大量的已经实现的数据目的地（Sink）�
 
 1、依赖：
 
-```
-        <dependency>
-            <groupId>org.apache.flink</groupId>
-            <artifactId>flink-connector-redis_2.11</artifactId>
-            <version>1.1.5</version>
-        </dependency>
+```xml
+<dependency>
+    <groupId>org.apache.flink</groupId>
+    <artifactId>flink-connector-redis_2.11</artifactId>
+    <version>1.1.5</version>
+</dependency>
 ```
 
 2、关键代码：
@@ -868,10 +858,9 @@ Flink针对DataStream提供了大量的已经实现的数据目的地（Sink）�
 ```
 
 
-
 ### 第 2 节 Flink DataSet常用API
 
-​		DataSet API同DataStream API一样有三个组成部分，各部分作用对应一致，此处不再赘述
+DataSet API同DataStream API一样有三个组成部分，各部分作用对应一致，此处不再赘述
 
 #### 2.1 DataSource
 
@@ -887,7 +876,7 @@ Flink针对DataStream提供了大量的已经实现的数据目的地（Sink）�
 
 #### 2.2 Transformation
 
-​		Flink针对DataSet也提供了大量的已经实现的算子，和DataStream计算很类似
+Flink针对DataSet也提供了大量的已经实现的算子，和DataStream计算很类似
 
 * Map：输入一个元素，然后返回一个元素，中间可以进行清洗转换等操作
 * FlatMap：输入一个元素，可以返回0个、1个或者多个元素
@@ -897,7 +886,7 @@ Flink针对DataStream提供了大量的已经实现的数据目的地（Sink）�
 
 #### 2.3 Sink
 
-​		Flink针对DataStream提供了大量的已经实现的数据目的地（Sink），具体如下所示
+Flink针对DataStream提供了大量的已经实现的数据目的地（Sink），具体如下所示
 
 * writeAsText()：将元素以字符串形式逐行写入，这些字符串通过调用每个元素的toString()方法来获取
 
@@ -909,15 +898,15 @@ Flink针对DataStream提供了大量的已经实现的数据目的地（Sink）�
 
 ## 第六部分 Flink Window窗口机制
 
-​		**Flink Window 背景**
+**Flink Window 背景**
 
-​		Flink认为Batch是Streaming的一个特例，因此Flink底层引擎是一个流式引擎，在上面实现了流处理和批处理。而Window就是从Streaming到Batch的桥梁。
+Flink认为Batch是Streaming的一个特例，因此Flink底层引擎是一个流式引擎，在上面实现了流处理和批处理。而Window就是从Streaming到Batch的桥梁。
 
-​		通俗讲，Window是用来对一个无限的流设置一个有限的集合，从而在有界的数据集上进行操作的一种机制。流上的集合由Window来划定范围，比如“计算过去10分钟”或者“最后50个元素的和”。
+通俗讲，Window是用来对一个无限的流设置一个有限的集合，从而在有界的数据集上进行操作的一种机制。流上的集合由Window来划定范围，比如“计算过去10分钟”或者“最后50个元素的和”。
 
-​		Window可以由时间（Time Window）（比如每30s）或者数据（Count Window）（如每100个元素）驱动。DataStream API提供了Time和Count的Window。
+​Window可以由时间（Time Window）（比如每30s）或者数据（Count Window）（如每100个元素）驱动。DataStream API提供了Time和Count的Window。
 
-​		**Flink Window 总览**
+**Flink Window 总览**
 
 - Window 是flink处理无限流的核心,Windows将流拆分为有限大小的“桶”，我们可以在其上应用计算。
 - Flink 认为 Batch 是 Streaming 的一个特例，所以 Flink 底层引擎是一个流式引擎，在上面实现了流处理和批处理。
