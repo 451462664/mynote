@@ -927,11 +927,8 @@ Flink认为Batch是Streaming的一个特例，因此Flink底层引擎是一个�
 步骤：
 
 1、获取流数据源
-
 2、获取窗口
-
 3、操作窗口数据
-
 4、输出窗口数据
 
 ### 第 1 节 时间窗口（TimeWindow）
@@ -940,11 +937,11 @@ Flink认为Batch是Streaming的一个特例，因此Flink底层引擎是一个�
 
 ![image-20200731072656176](D:/vnote/mynote/images/Flink讲义.assets/image-20200731072656176.png)
 
-​		将数据依据固定的窗口长度对数据进行切分
+将数据依据固定的窗口长度对数据进行切分
 
-​		特点：时间对齐，窗口长度固定，没有重叠
+特点：时间对齐，窗口长度固定，没有重叠
 
-​		**代码示例**
+**代码示例**
 
 ```java
 package com.lagou.edu.flink.window;
@@ -974,54 +971,41 @@ public class TumblingWindow {
     public static void main(String[] args) {
     //设置执行环境，类似spark中初始化sparkContext
         StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
-        
         env.setParallelism(1);
-
         DataStreamSource<String> dataStreamSource = env.socketTextStream("teache2", 7777);
-
         SingleOutputStreamOperator<Tuple2<String, Integer>> mapStream = dataStreamSource.map(new MapFunction<String, Tuple2<String, Integer>>() {
             @Override
             public Tuple2<String, Integer> map(String value) throws Exception {
 
                 SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS");
-
                 long timeMillis = System.currentTimeMillis();
-
                 int random = new Random().nextInt(10);
-
                 System.out.println("value: " + value + " random: " + random + "timestamp: " + timeMillis + "|" + format.format(timeMillis));
-
                 return new Tuple2<String, Integer>(value, random);
             }
         });
 
         KeyedStream<Tuple2<String, Integer>, Tuple> keyedStream = mapStream.keyBy(0);
-
-
         // 基于时间驱动，每隔10s划分一个窗口
         WindowedStream<Tuple2<String, Integer>, Tuple, TimeWindow> timeWindow = keyedStream.timeWindow(Time.seconds(10));
-
         // 基于事件驱动, 每相隔3个事件(即三个相同key的数据), 划分一个窗口进行计算
         // WindowedStream<Tuple2<String, Integer>, Tuple, GlobalWindow> countWindow = keyedStream.countWindow(3);
-
         // apply是窗口的应用函数，即apply里的函数将应用在此窗口的数据上。
         timeWindow.apply(new MyTimeWindowFunction()).print();
         // countWindow.apply(new MyCountWindowFunction()).print();
-
         try {
             // 转换算子都是lazy init的, 最后要显式调用 执行程序
             env.execute();
         } catch (Exception e) {
             e.printStackTrace();
         }
-
     }
 }
 ```
 
 ##### 1.2.1 基于时间驱动
 
-​		场景：我们需要统计每一分钟中用户购买的商品的总数，需要将用户的行为事件按每一分钟进行切分，这种切分被成为翻滚时间窗口（Tumbling Time Window）
+场景：我们需要统计每一分钟中用户购买的商品的总数，需要将用户的行为事件按每一分钟进行切分，这种切分被成为翻滚时间窗口（Tumbling Time Window）
 
 ```java
 package com.lagou.edu.flink.window;
@@ -1039,27 +1023,22 @@ public class MyTimeWindowFunction implements WindowFunction<Tuple2<String,Intege
     @Override
     public void apply(Tuple tuple, TimeWindow window, Iterable<Tuple2<String, Integer>> input, Collector<String> out) throws Exception {
         SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS");
-
         int sum = 0;
-
         for(Tuple2<String,Integer> tuple2 : input){
             sum +=tuple2.f1;
         }
-
         long start = window.getStart();
         long end = window.getEnd();
-
         out.collect("key:" + tuple.getField(0) + " value: " + sum + "| window_start :"
                 + format.format(start) + "  window_end :" + format.format(end)
         );
-
     }
 }
 ```
 
 ##### 1.2.2 基于事件驱动
 
-​		场景：当我们想要每100个用户的购买行为作为驱动，那么每当窗口中填满100个”相同”元素了，就会对窗口进行计算。
+​场景：当我们想要每100个用户的购买行为作为驱动，那么每当窗口中填满100个”相同”元素了，就会对窗口进行计算。
 
 ```java
 package com.lagou.edu.flink.window;
@@ -1076,16 +1055,14 @@ public class MyCountWindowFunction implements WindowFunction<Tuple2<String, Inte
 
     @Override
     public void apply(Tuple tuple, GlobalWindow window, Iterable<Tuple2<String, Integer>> input, Collector<String> out) throws Exception {
+
         SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS");
-
         int sum = 0;
-
         for (Tuple2<String, Integer> tuple2 : input){
             sum += tuple2.f1;
         }
         //无用的时间戳，默认值为： Long.MAX_VALUE,因为基于事件计数的情况下，不关心时间。
         long maxTimestamp = window.maxTimestamp();
-
         out.collect("key:" + tuple.getField(0) + " value: " + sum + "| maxTimeStamp :"
                 + maxTimestamp + "," + format.format(maxTimestamp)
         );
@@ -1097,19 +1074,19 @@ public class MyCountWindowFunction implements WindowFunction<Tuple2<String, Inte
 
 ![image-20200731073053682](D:/vnote/mynote/images/Flink讲义.assets/image-20200731073053682.png)
 
-​		滑动窗口是固定窗口的更广义的一种形式，滑动窗口由固定的窗口长度和滑动间隔组成
+​滑动窗口是固定窗口的更广义的一种形式，滑动窗口由固定的窗口长度和滑动间隔组成
 
-​		特点：窗口长度固定，可以有重叠
+​特点：窗口长度固定，可以有重叠
 
 ##### 1.2.1 基于时间的滑动窗口
 
-​		场景: 我们可以每30秒计算一次最近一分钟用户购买的商品总数
+场景: 我们可以每30秒计算一次最近一分钟用户购买的商品总数
 
 ##### 1.2.2 基于事件的滑动窗口
 
-​		场景: 每10个 “相同”元素计算一次最近100个元素的总和
+场景: 每10个 “相同”元素计算一次最近100个元素的总和
 
-​		**代码实现**
+**代码实现**
 
 ```java
 package com.lagou.edu.flink.window;
@@ -1139,36 +1116,27 @@ public class SlidingWindow {
     public static void main(String[] args) {
         // 设置执行环境, 类似spark中初始化SparkContext
         StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
-        
         env.setParallelism(1);
-
         DataStreamSource<String> dataStreamSource = env.socketTextStream("teacher2", 7777);
-
         SingleOutputStreamOperator<Tuple2<String, Integer>> mapStream = dataStreamSource.map(new MapFunction<String, Tuple2<String, Integer>>() {
+
             @Override
             public Tuple2<String, Integer> map(String value) throws Exception {
                 SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS");
                 long timeMillis = System.currentTimeMillis();
-
                 int random = new Random().nextInt(10);
                 System.err.println("value : " + value + " random : " + random + " timestamp : " + timeMillis + "|" + format.format(timeMillis));
-
                 return new Tuple2<String, Integer>(value, random);
             }
         });
         KeyedStream<Tuple2<String, Integer>, Tuple> keyedStream = mapStream.keyBy(0);
-
         //基于时间驱动，每隔5s计算一下最近10s的数据
      //   WindowedStream<Tuple2<String, Integer>, Tuple, TimeWindow> timeWindow = keyedStream.timeWindow(Time.seconds(10), Time.seconds(5));
         //基于事件驱动，每隔2个事件，触发一次计算，本次窗口的大小为3，代表窗口里的每种事件最多为3个
         WindowedStream<Tuple2<String, Integer>, Tuple, GlobalWindow> countWindow = keyedStream.countWindow(3, 2);
-
      //   timeWindow.sum(1).print();
-
         countWindow.sum(1).print();
-
      //   timeWindow.apply(new MyTimeWindowFunction()).print();
-
         try {
             env.execute();
         } catch (Exception e) {
@@ -1176,16 +1144,13 @@ public class SlidingWindow {
         }
     }
 }
-
 ```
-
-
 
 #### 1.3 会话窗口（Session Window）
 
 ![image-20200731073350282](D:/vnote/mynote/images/Flink讲义.assets/image-20200731073350282.png)
 
-​       由一系列事件组合一个指定时间长度的timeout间隙组成，类似于web应用的session，也就是一段时间没有接收到新数据就会生成新的窗口。
+由一系列事件组合一个指定时间长度的timeout间隙组成，类似于web应用的session，也就是一段时间没有接收到新数据就会生成新的窗口。
 
 session窗口分配器通过session活动来对元素进行分组，session窗口跟滚动窗口和滑动窗口相比，不会有重叠和固定的开始时间和结束时间的情况
 
@@ -1193,19 +1158,17 @@ session窗口在一个固定的时间周期内不再收到元素，即非活动�
 
 一个session窗口通过一个session间隔来配置，这个session间隔定义了非活跃周期的长度，当这个非活跃周期产生，那么当前的session将关闭并且后续的元素将被分配到新的session窗口中去。
 
-​       **特点**
+**特点**
 
-​	   会话窗口不重叠，没有固定的开始和结束时间
+会话窗口不重叠，没有固定的开始和结束时间。
+与翻滚窗口和滑动窗口相反, 当会话窗口在一段时间内没有接收到元素时会关闭会话窗口。
+后续的元素将会被分配给新的会话窗口。
 
-​	   与翻滚窗口和滑动窗口相反, 当会话窗口在一段时间内没有接收到元素时会关闭会话窗口。
+​**案例描述**
 
-​		后续的元素将会被分配给新的会话窗口
+​计算每个用户在活跃期间总共购买的商品数量，如果用户30秒没有活动则视为会话断开
 
-​		**案例描述**
-
-​		计算每个用户在活跃期间总共购买的商品数量，如果用户30秒没有活动则视为会话断开
-
-​		**代码实现**
+**代码实现**
 
 ```java
 package com.lagou.edu.flink.window;
@@ -1230,33 +1193,24 @@ public class SessionWindow {
     public static void main(String[] args) {
 
         // 设置执行环境, 类似spark中初始化sparkContext
-
         StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
-
         env.setParallelism(1);
-
         DataStreamSource<String> dataStreamSource = env.socketTextStream("teacher2", 7777);
-
         SingleOutputStreamOperator<Tuple2<String, Integer>> mapStream = dataStreamSource.map(new MapFunction<String, Tuple2<String, Integer>>() {
             @Override
             public Tuple2<String, Integer> map(String value) throws Exception {
+
                 SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS");
                 long timeMillis = System.currentTimeMillis();
-
                 int random = new Random().nextInt(10);
-
                 System.err.println("value : " + value + " random : " + random + " timestamp : " + timeMillis + "|" + format.format(timeMillis));
-
                 return new Tuple2<String, Integer>(value, random);
             }
         });
         KeyedStream<Tuple2<String, Integer>, Tuple> keyedStream = mapStream.keyBy(0);
-
         //如果连续10s内，没有数据进来，则会话窗口断开。
         WindowedStream<Tuple2<String, Integer>, Tuple, TimeWindow> window = keyedStream.window(ProcessingTimeSessionWindows.withGap(Time.seconds(10)));
-
         // window.sum(1).print();
-        
         window.apply(new MyTimeWindowFunction()).print();
 
         try {
@@ -1274,29 +1228,27 @@ public class SessionWindow {
 
 ## 1.1 Time
 
-在Flink的流式处理中，会涉及到时间的不同概念，如下图所示：
+在Flink的流式处理中，会涉及到时间的不同概念，如下图所示
 
 ![image-20200921112633884](D:/vnote/mynote/images/Flink讲义.assets/image-20200921112633884.png)
 
-\- EventTime[事件时间]
+- EventTime[事件时间]
 
  事件发生的时间，例如：点击网站上的某个链接的时间，每一条日志都会记录自己的生成时间
 
 如果以EventTime为基准来定义时间窗口那将形成EventTimeWindow,要求消息本身就应该携带EventTime
 
-\- IngestionTime[摄入时间]
+- IngestionTime[摄入时间]
 
  数据进入Flink的时间，如某个Flink节点的source operator接收到数据的时间，例如：某个source消费到kafka中的数据
 
 如果以IngesingtTime为基准来定义时间窗口那将形成IngestingTimeWindow,以source的systemTime为准
 
-\- ProcessingTime[处理时间]
+- ProcessingTime[处理时间]
 
- 某个Flink节点执行某个operation的时间，例如：timeWindow处理数据时的系统时间，默认的时间属性就是Processing Time
+ 某个Flink节点执行某个operation的时间，例如：timeWindow处理数据时的系统时间，默认的时间属性就是ProcessingTime
 
 如果以ProcessingTime基准来定义时间窗口那将形成ProcessingTimeWindow，以operator的systemTime为准
-
- 
 
 在Flink的流式处理中，绝大部分的业务都会使用EventTime，一般只在EventTime无法使用时，才会被迫使用ProcessingTime或者IngestionTime。
 
@@ -1306,7 +1258,7 @@ env.setStreamTimeCharacteristic(TimeCharacteristic.EventTime) //设置使用事�
 
 ### 1.2.数据延迟产生的问题
 
-l 示例1
+> 示例1
 
 现在假设，你正在去往地下停车场的路上，并且打算用手机点一份外卖。
 
@@ -1318,7 +1270,7 @@ l 示例1
 
 一般在实际开发中会以事件时间作为计算标准
 
-l 示例2
+> 示例2
 
 ![image-20200921111842449](D:/vnote/mynote/images/Flink讲义.assets/image-20200921111842449.png)
 
@@ -1332,19 +1284,13 @@ l 示例2
 
 EventTime，因为我们要根据日志的生成时间进行统计。
 
-l 示例3
+> 示例3
 
 某 App 会记录用户的所有点击行为，并回传日志（在网络不好的情况下，先保存在本地，延后回传）。
 
-A 用户在 11:02 对 App 进行操作，B 用户在 11:03 操作了 App，
+A 用户在11:02对App进行操作，B用户在11:03操作了 App，但是 A 用户的网络不太稳定，回传日志延迟了，导致我们在服务端先接受到 B 用户 11:03 的消息，然后再接受到 A 用户 11:02 的消息，消息乱序了。
 
-但是 A 用户的网络不太稳定，回传日志延迟了，导致我们在服务端先接受到 B 用户 11:03 的消息，然后再接受到 A 用户 11:02 的消息，消息乱序了。
-
- 
-
- 
-
-l 示例4
+> 示例4
 
 在实际环境中，经常会出现，因为网络原因，数据有可能会延迟一会才到达Flink实时处理系统。
 
@@ -1358,29 +1304,21 @@ l 示例4
 
 2. 有一个时间窗口
 
-  \- 开始时间为：2017-03-19 10:00:00
+  - 开始时间为：2017-03-19 10:00:00
 
-  \- 结束时间为：2017-03-19 10:10:00
+  - 结束时间为：2017-03-19 10:10:00
 
 3. 有一个数据，因为网络延迟
 
-  \- 事件发生的时间为：2017-03-19 10:10:00
+  - 事件发生的时间为：2017-03-19 10:10:00
 
-  \- 但进入到窗口的时间为：2017-03-19 10:10:02，延迟了2秒中
+  - 但进入到窗口的时间为：2017-03-19 10:10:02，延迟了2秒中
 
 4. 时间窗口并没有将59这个数据计算进来，导致数据统计不正确
 
- 
-
- 
-
 这种处理方式，根据消息进入到window时间，来进行计算。在网络有延迟的时候，会引起计算误差。
 
-如何解决?---使用水印解决网络延迟问题	
-
- 
-
- 
+如何解决?---使用水印解决网络延迟问题
 
 通过上面的例子,我们知道,在进行数据处理的时候应该按照事件时间进行处理,也就是窗口应该要考虑到事件时间
 
@@ -1394,17 +1332,17 @@ l 示例4
 
 可以理解为：收到一条消息后，额外给这个消息添加了一个时间字段，这就是添加水印。
 
-\- 水印并不会影响原有Eventtime事件时间
+- 水印并不会影响原有Eventtime事件时间
 
-\- 当数据流添加水印后，会按照水印时间来触发窗口计算
+- 当数据流添加水印后，会按照水印时间来触发窗口计算
 
 也就是说watermark水印是用来触发窗口计算的
 
-\- 一般会设置水印时间，比事件时间小几秒钟,表示最大允许数据延迟达到多久
+- 一般会设置水印时间，比事件时间小几秒钟,表示最大允许数据延迟达到多久
 
-(即水印时间 = 事件时间 - 允许延迟时间)10:09:57 =  10:10:00  - 3s   
+(即水印时间 = 事件时间 - 允许延迟时间)10:09:57=10:10:00-3s
 
-\- 当接收到的 水印时间 >= 窗口结束时间，则触发计算 如等到一条数据的水印时间为10:10:00 >= 10:10:00 才触发计算,也就是要等到事件时间为10:10:03的数据到来才触发计算
+- 当接收到的 水印时间 >= 窗口结束时间，则触发计算 如等到一条数据的水印时间为10:10:00 >= 10:10:00 才触发计算,也就是要等到事件时间为10:10:03的数据到来才触发计算
 
 (即事件时间 - 允许延迟时间 >= 窗口结束时间  或  事件时间 >= 窗口结束时间 + 允许延迟时间)
 
@@ -1490,7 +1428,6 @@ l 示例4
 
 [00:00:50,00:01:00)
 
- 
 
 l 注意:
 
@@ -1520,11 +1457,11 @@ l 注意:
 
  ![image-20200921112000975](D:/vnote/mynote/images/Flink讲义.assets/image-20200921112000975.png)
 
- 
+
 
 ![image-20200921112017178](D:/vnote/mynote/images/Flink讲义.assets/image-20200921112017178.png)
 
- 
+
 
 定期生成是现实时间驱动的，这里的“定期生成”主要是指 watermark（因为 timestamp 是每一条数据都需要有的），即定期会调用生成逻辑去产生一个 watermark。
 
@@ -1647,15 +1584,12 @@ public class WaterDemo {
 
  一个Operator由多个并行的Task(线程)来执行， 一个Operator的并行Task(线程)数目就被称为该Operator(任务)的并行度(Parallel)
 
- 
 
 l 并行度可以有如下几种指定方式
 
 1.Operator Level（算子级别）(可以使用)
 
 一个算子、数据源和sink的并行度可以通过调用 setParallelism()方法来指定
-
-
 
  ![image-20200921112057156](D:/vnote/mynote/images/Flink讲义.assets/image-20200921112057156.png)
 
@@ -1664,8 +1598,6 @@ l 并行度可以有如下几种指定方式
 执行环境(任务)的默认并行度可以通过调用setParallelism()方法指定。为了以并行度3来执行所有的算子、数据源和data sink， 可以通过如下的方式设置执行环境的并行度：
 
 执行环境的并行度可以通过显式设置算子的并行度而被重写
-
-
 
  ![image-20200921112112743](D:/vnote/mynote/images/Flink讲义.assets/image-20200921112112743.png)
 
@@ -1678,11 +1610,9 @@ l 并行度可以有如下几种指定方式
 ./bin/flink run -p 10 WordCount-java.jar
 
 
-
 4.System Level（系统默认级别,尽量不使用）
 
 在系统级可以通过设置flink-conf.yaml文件中的parallelism.default属性来指定所有执行环境的默认并行度
-
 
 
 l 示例
@@ -1710,9 +1640,6 @@ Example4
 
 通过设置并行度为9，并且设置sink的并行度为1，则Source、Reduce将占用9个Slot，但是Sink只占用1个Slot
 
- 
-
- 
 
 l 注意
 
@@ -1769,175 +1696,175 @@ public class FromKafka {
 
 open方法源码：
 
-```
+```java
 @Override
-	public void open(Configuration configuration) throws Exception {
-		// determine the offset commit mode 
-		// 指定offset的提交模式：   DISABLED、 ON_CHECKPOINTS 、KAFKA_PERIODIC
-		this.offsetCommitMode = OffsetCommitModes.fromConfiguration(
-				getIsAutoCommitEnabled(),
-				enableCommitOnCheckpoints,
-				((StreamingRuntimeContext) getRuntimeContext()).isCheckpointingEnabled());
+public void open(Configuration configuration) throws Exception {
+	// determine the offset commit mode 
+	// 指定offset的提交模式：   DISABLED、 ON_CHECKPOINTS 、KAFKA_PERIODIC
+	this.offsetCommitMode = OffsetCommitModes.fromConfiguration(
+			getIsAutoCommitEnabled(),
+			enableCommitOnCheckpoints,
+			((StreamingRuntimeContext) getRuntimeContext()).isCheckpointingEnabled());
 
-		// create the partition discoverer
-		//  创建一个分区发现器
-		this.partitionDiscoverer = createPartitionDiscoverer(
-				topicsDescriptor,
-				getRuntimeContext().getIndexOfThisSubtask(),
-				getRuntimeContext().getNumberOfParallelSubtasks());
-		// 实例化出 consumer对象
-		this.partitionDiscoverer.open();
+	// create the partition discoverer
+	//  创建一个分区发现器
+	this.partitionDiscoverer = createPartitionDiscoverer(
+			topicsDescriptor,
+			getRuntimeContext().getIndexOfThisSubtask(),
+			getRuntimeContext().getNumberOfParallelSubtasks());
+	// 实例化出 consumer对象
+	this.partitionDiscoverer.open();
 
-		// 已经订阅的分区列表
-		subscribedPartitionsToStartOffsets = new HashMap<>();
-		// 获取kafka中的所有分区
-		final List<KafkaTopicPartition> allPartitions = partitionDiscoverer.discoverPartitions();
-		if (restoredState != null) {
-			//restoredState: 快照  consumer是从快照中恢复的方式创建
-			for (KafkaTopicPartition partition : allPartitions) {
-				if (!restoredState.containsKey(partition)) {
-					restoredState.put(partition, KafkaTopicPartitionStateSentinel.EARLIEST_OFFSET);
-				}
-			}
-
-			for (Map.Entry<KafkaTopicPartition, Long> restoredStateEntry : restoredState.entrySet()) {
-				if (!restoredFromOldState) {
-					// seed the partition discoverer with the union state while filtering out
-					// restored partitions that should not be subscribed by this subtask
-					// 过滤一下和当前的subTask没有关系的分区数据
-					if (KafkaTopicPartitionAssigner.assign(
-						restoredStateEntry.getKey(), getRuntimeContext().getNumberOfParallelSubtasks())
-						== getRuntimeContext().getIndexOfThisSubtask()){
-						subscribedPartitionsToStartOffsets.put(restoredStateEntry.getKey(), restoredStateEntry.getValue());
-					}
-				} else {
-					// when restoring from older 1.1 / 1.2 state, the restored state would not be the union state;
-					// in this case, just use the restored state as the subscribed partitions
-					subscribedPartitionsToStartOffsets.put(restoredStateEntry.getKey(), restoredStateEntry.getValue());
-				}
-			}
-
-			LOG.info("Consumer subtask {} will start reading {} partitions with offsets in restored state: {}",
-				getRuntimeContext().getIndexOfThisSubtask(), subscribedPartitionsToStartOffsets.size(), subscribedPartitionsToStartOffsets);
-		} else {
-			//重新创建一个新的consumer
-			// use the partition discoverer to fetch the initial seed partitions,
-			// and set their initial offsets depending on the startup mode.
-			// for SPECIFIC_OFFSETS and TIMESTAMP modes, we set the specific offsets now;
-			// for other modes (EARLIEST, LATEST, and GROUP_OFFSETS), the offset is lazily determined
-			// when the partition is actually read.
-			switch (startupMode) {
-			//startupMode : consumer的消费策略
-				case SPECIFIC_OFFSETS:
-					if (specificStartupOffsets == null) {
-						throw new IllegalStateException(
-							"Startup mode for the consumer set to " + StartupMode.SPECIFIC_OFFSETS +
-								", but no specific offsets were specified.");
-					}
-
-					for (KafkaTopicPartition seedPartition : allPartitions) {
-						Long specificOffset = specificStartupOffsets.get(seedPartition);
-						if (specificOffset != null) {
-							// since the specified offsets represent the next record to read, we subtract
-							// it by one so that the initial state of the consumer will be correct
-							subscribedPartitionsToStartOffsets.put(seedPartition, specificOffset - 1);
-						} else {
-							// default to group offset behaviour if the user-provided specific offsets
-							// do not contain a value for this partition
-							subscribedPartitionsToStartOffsets.put(seedPartition, KafkaTopicPartitionStateSentinel.GROUP_OFFSET);
-						}
-					}
-
-					break;
-				case TIMESTAMP:
-					if (startupOffsetsTimestamp == null) {
-						throw new IllegalStateException(
-							"Startup mode for the consumer set to " + StartupMode.TIMESTAMP +
-								", but no startup timestamp was specified.");
-					}
-
-					for (Map.Entry<KafkaTopicPartition, Long> partitionToOffset
-						: fetchOffsetsWithTimestamp(allPartitions, startupOffsetsTimestamp).entrySet()) {
-						subscribedPartitionsToStartOffsets.put(
-							partitionToOffset.getKey(),
-							(partitionToOffset.getValue() == null)
-								// if an offset cannot be retrieved for a partition with the given timestamp,
-								// we default to using the latest offset for the partition
-								? KafkaTopicPartitionStateSentinel.LATEST_OFFSET
-								// since the specified offsets represent the next record to read, we subtract
-								// it by one so that the initial state of the consumer will be correct
-								: partitionToOffset.getValue() - 1);
-					}
-
-					break;
-				default:
-					for (KafkaTopicPartition seedPartition : allPartitions) {
-						subscribedPartitionsToStartOffsets.put(seedPartition, startupMode.getStateSentinel());
-					}
-			}
-
-			if (!subscribedPartitionsToStartOffsets.isEmpty()) {
-				switch (startupMode) {
-					case EARLIEST:
-						LOG.info("Consumer subtask {} will start reading the following {} partitions from the earliest offsets: {}",
-							getRuntimeContext().getIndexOfThisSubtask(),
-							subscribedPartitionsToStartOffsets.size(),
-							subscribedPartitionsToStartOffsets.keySet());
-						break;
-					case LATEST:
-						LOG.info("Consumer subtask {} will start reading the following {} partitions from the latest offsets: {}",
-							getRuntimeContext().getIndexOfThisSubtask(),
-							subscribedPartitionsToStartOffsets.size(),
-							subscribedPartitionsToStartOffsets.keySet());
-						break;
-					case TIMESTAMP:
-						LOG.info("Consumer subtask {} will start reading the following {} partitions from timestamp {}: {}",
-							getRuntimeContext().getIndexOfThisSubtask(),
-							subscribedPartitionsToStartOffsets.size(),
-							startupOffsetsTimestamp,
-							subscribedPartitionsToStartOffsets.keySet());
-						break;
-					case SPECIFIC_OFFSETS:
-						LOG.info("Consumer subtask {} will start reading the following {} partitions from the specified startup offsets {}: {}",
-							getRuntimeContext().getIndexOfThisSubtask(),
-							subscribedPartitionsToStartOffsets.size(),
-							specificStartupOffsets,
-							subscribedPartitionsToStartOffsets.keySet());
-
-						List<KafkaTopicPartition> partitionsDefaultedToGroupOffsets = new ArrayList<>(subscribedPartitionsToStartOffsets.size());
-						for (Map.Entry<KafkaTopicPartition, Long> subscribedPartition : subscribedPartitionsToStartOffsets.entrySet()) {
-							if (subscribedPartition.getValue() == KafkaTopicPartitionStateSentinel.GROUP_OFFSET) {
-								partitionsDefaultedToGroupOffsets.add(subscribedPartition.getKey());
-							}
-						}
-
-						if (partitionsDefaultedToGroupOffsets.size() > 0) {
-							LOG.warn("Consumer subtask {} cannot find offsets for the following {} partitions in the specified startup offsets: {}" +
-									"; their startup offsets will be defaulted to their committed group offsets in Kafka.",
-								getRuntimeContext().getIndexOfThisSubtask(),
-								partitionsDefaultedToGroupOffsets.size(),
-								partitionsDefaultedToGroupOffsets);
-						}
-						break;
-					case GROUP_OFFSETS:
-						LOG.info("Consumer subtask {} will start reading the following {} partitions from the committed group offsets in Kafka: {}",
-							getRuntimeContext().getIndexOfThisSubtask(),
-							subscribedPartitionsToStartOffsets.size(),
-							subscribedPartitionsToStartOffsets.keySet());
-				}
-			} else {
-				LOG.info("Consumer subtask {} initially has no partitions to read from.",
-					getRuntimeContext().getIndexOfThisSubtask());
+	// 已经订阅的分区列表
+	subscribedPartitionsToStartOffsets = new HashMap<>();
+	// 获取kafka中的所有分区
+	final List<KafkaTopicPartition> allPartitions = partitionDiscoverer.discoverPartitions();
+	if (restoredState != null) {
+		//restoredState: 快照  consumer是从快照中恢复的方式创建
+		for (KafkaTopicPartition partition : allPartitions) {
+			if (!restoredState.containsKey(partition)) {
+				restoredState.put(partition, KafkaTopicPartitionStateSentinel.EARLIEST_OFFSET);
 			}
 		}
+
+		for (Map.Entry<KafkaTopicPartition, Long> restoredStateEntry : restoredState.entrySet()) {
+			if (!restoredFromOldState) {
+				// seed the partition discoverer with the union state while filtering out
+				// restored partitions that should not be subscribed by this subtask
+				// 过滤一下和当前的subTask没有关系的分区数据
+				if (KafkaTopicPartitionAssigner.assign(
+					restoredStateEntry.getKey(), getRuntimeContext().getNumberOfParallelSubtasks())
+					== getRuntimeContext().getIndexOfThisSubtask()){
+					subscribedPartitionsToStartOffsets.put(restoredStateEntry.getKey(), restoredStateEntry.getValue());
+				}
+			} else {
+				// when restoring from older 1.1 / 1.2 state, the restored state would not be the union state;
+				// in this case, just use the restored state as the subscribed partitions
+				subscribedPartitionsToStartOffsets.put(restoredStateEntry.getKey(), restoredStateEntry.getValue());
+			}
+		}
+
+		LOG.info("Consumer subtask {} will start reading {} partitions with offsets in restored state: {}",
+			getRuntimeContext().getIndexOfThisSubtask(), subscribedPartitionsToStartOffsets.size(), subscribedPartitionsToStartOffsets);
+	} else {
+		//重新创建一个新的consumer
+		// use the partition discoverer to fetch the initial seed partitions,
+		// and set their initial offsets depending on the startup mode.
+		// for SPECIFIC_OFFSETS and TIMESTAMP modes, we set the specific offsets now;
+		// for other modes (EARLIEST, LATEST, and GROUP_OFFSETS), the offset is lazily determined
+		// when the partition is actually read.
+		switch (startupMode) {
+		//startupMode : consumer的消费策略
+			case SPECIFIC_OFFSETS:
+				if (specificStartupOffsets == null) {
+					throw new IllegalStateException(
+						"Startup mode for the consumer set to " + StartupMode.SPECIFIC_OFFSETS +
+							", but no specific offsets were specified.");
+				}
+
+				for (KafkaTopicPartition seedPartition : allPartitions) {
+					Long specificOffset = specificStartupOffsets.get(seedPartition);
+					if (specificOffset != null) {
+						// since the specified offsets represent the next record to read, we subtract
+						// it by one so that the initial state of the consumer will be correct
+						subscribedPartitionsToStartOffsets.put(seedPartition, specificOffset - 1);
+					} else {
+						// default to group offset behaviour if the user-provided specific offsets
+						// do not contain a value for this partition
+						subscribedPartitionsToStartOffsets.put(seedPartition, KafkaTopicPartitionStateSentinel.GROUP_OFFSET);
+					}
+				}
+
+				break;
+			case TIMESTAMP:
+				if (startupOffsetsTimestamp == null) {
+					throw new IllegalStateException(
+						"Startup mode for the consumer set to " + StartupMode.TIMESTAMP +
+							", but no startup timestamp was specified.");
+				}
+
+				for (Map.Entry<KafkaTopicPartition, Long> partitionToOffset
+					: fetchOffsetsWithTimestamp(allPartitions, startupOffsetsTimestamp).entrySet()) {
+					subscribedPartitionsToStartOffsets.put(
+						partitionToOffset.getKey(),
+						(partitionToOffset.getValue() == null)
+							// if an offset cannot be retrieved for a partition with the given timestamp,
+							// we default to using the latest offset for the partition
+							? KafkaTopicPartitionStateSentinel.LATEST_OFFSET
+							// since the specified offsets represent the next record to read, we subtract
+							// it by one so that the initial state of the consumer will be correct
+							: partitionToOffset.getValue() - 1);
+				}
+
+				break;
+			default:
+				for (KafkaTopicPartition seedPartition : allPartitions) {
+					subscribedPartitionsToStartOffsets.put(seedPartition, startupMode.getStateSentinel());
+				}
+		}
+
+		if (!subscribedPartitionsToStartOffsets.isEmpty()) {
+			switch (startupMode) {
+				case EARLIEST:
+					LOG.info("Consumer subtask {} will start reading the following {} partitions from the earliest offsets: {}",
+						getRuntimeContext().getIndexOfThisSubtask(),
+						subscribedPartitionsToStartOffsets.size(),
+						subscribedPartitionsToStartOffsets.keySet());
+					break;
+				case LATEST:
+					LOG.info("Consumer subtask {} will start reading the following {} partitions from the latest offsets: {}",
+						getRuntimeContext().getIndexOfThisSubtask(),
+						subscribedPartitionsToStartOffsets.size(),
+						subscribedPartitionsToStartOffsets.keySet());
+					break;
+				case TIMESTAMP:
+					LOG.info("Consumer subtask {} will start reading the following {} partitions from timestamp {}: {}",
+						getRuntimeContext().getIndexOfThisSubtask(),
+						subscribedPartitionsToStartOffsets.size(),
+						startupOffsetsTimestamp,
+						subscribedPartitionsToStartOffsets.keySet());
+					break;
+				case SPECIFIC_OFFSETS:
+					LOG.info("Consumer subtask {} will start reading the following {} partitions from the specified startup offsets {}: {}",
+						getRuntimeContext().getIndexOfThisSubtask(),
+						subscribedPartitionsToStartOffsets.size(),
+						specificStartupOffsets,
+						subscribedPartitionsToStartOffsets.keySet());
+
+					List<KafkaTopicPartition> partitionsDefaultedToGroupOffsets = new ArrayList<>(subscribedPartitionsToStartOffsets.size());
+					for (Map.Entry<KafkaTopicPartition, Long> subscribedPartition : subscribedPartitionsToStartOffsets.entrySet()) {
+						if (subscribedPartition.getValue() == KafkaTopicPartitionStateSentinel.GROUP_OFFSET) {
+							partitionsDefaultedToGroupOffsets.add(subscribedPartition.getKey());
+						}
+					}
+
+					if (partitionsDefaultedToGroupOffsets.size() > 0) {
+						LOG.warn("Consumer subtask {} cannot find offsets for the following {} partitions in the specified startup offsets: {}" +
+								"; their startup offsets will be defaulted to their committed group offsets in Kafka.",
+							getRuntimeContext().getIndexOfThisSubtask(),
+							partitionsDefaultedToGroupOffsets.size(),
+							partitionsDefaultedToGroupOffsets);
+					}
+					break;
+				case GROUP_OFFSETS:
+					LOG.info("Consumer subtask {} will start reading the following {} partitions from the committed group offsets in Kafka: {}",
+						getRuntimeContext().getIndexOfThisSubtask(),
+						subscribedPartitionsToStartOffsets.size(),
+						subscribedPartitionsToStartOffsets.keySet());
+			}
+		} else {
+			LOG.info("Consumer subtask {} initially has no partitions to read from.",
+				getRuntimeContext().getIndexOfThisSubtask());
+		}
 	}
+}
 ```
 
- 该方法包含的内容为`FlinkKafkaConsumer`的初始化逻辑。 
+ 该方法包含的内容为`FlinkKafkaConsumer`的初始化逻辑。
 
- 首先设置提交offset的模式。 
+ 首先设置提交offset的模式。
 
- 接下来创建和启动分区发现工具。 
+ 接下来创建和启动分区发现工具。
 
  `subscribedPartitionsToStartOffsets` 为已订阅的分区列表，这里将它初始化。 
 
@@ -1985,19 +1912,17 @@ checkpoint开启时:
 - ON_CHECKPOINTS：当checkpoint完成的时候再提交offset。
 - KAFKA_PERIODIC：周期性提交offset。
 
-
-
 **Flink kafka Producer**
 
-nc 
+nc
 
-代码接受nc 
+代码接受nc
 
 把接收到的nc的数据，给到kafka    flink  kafka  producer
 
 代码：
 
-```
+```java
 package com.lagou.sink;
 
 import org.apache.flink.api.common.serialization.SimpleStringSchema;
@@ -2028,12 +1953,12 @@ public class SinkToKafka {
 
  抽取（extract）、转换（transform）、加载（load） 
 
-{"dt":"2020-08-12 17:19:40","countryCode":"SA","data":[{"type":"s2","score":0.1,"level":"A+"},{"type":"s5","score":0.5,"level":"C"}]}   
+{"dt":"2020-08-12 17:19:40","countryCode":"SA","data":[{"type":"s2","score":0.1,"level":"A+"},{"type":"s5","score":0.5,"level":"C"}]}
 
 areass AREA_US US
 areass AREA_CT TW,HK
 areass AREA_AR PK,KW,SA
-areass AREA_IN IN        
+areass AREA_IN IN
 
 ​    dt， 区域（亚洲区) ,data[]
 
@@ -2072,7 +1997,7 @@ areass AREA_IN IN
 
 1.3.1 flume的配置文件：file-kafka-allData.conf
 
-```
+```properties
 agent1.sources = source1
  
 agent1.sinks = sink1
