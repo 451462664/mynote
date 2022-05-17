@@ -45,7 +45,7 @@ springboot 参数绑定
 https://juejin.im/post/5d614813f265da03ef7a1da7
 https://juejin.im/post/5d66628ce51d4561cd246670
 springcloud 中文网 https://www.springcloud.cc/mybatis
-源码 https://www.cnblogs.com/zhjh256/p/8512392.html
+mybatis源码 https://www.cnblogs.com/zhjh256/p/8512392.html
 
 ES 中文文档 http://doc.codingdict.com/elasticsearch/
 
@@ -116,7 +116,7 @@ oracle https://www.oracle.com/technetwork/cn/articles/java/index.html
 aqs https://segmentfault.com/a/1190000016058789
 永顺 https://segmentfault.com/u/yongshun/articles?page=1
 说好不能打脸 https://blog.csdn.net/yinwenjie
-Throwable http://www.throwable.club/
+Throwable https://www.throwx.cn/
 设计模式 https://legacy.gitbook.com/@alleniverson
 源码分析 https://www.cnblogs.com/java-chen-hao/
 田小波 http://www.tianxiaobo.com

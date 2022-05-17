@@ -5,6 +5,15 @@
     "folders": [
         {
             "name": "Spring Batch"
+        },
+        {
+            "name": "Spring Data"
+        },
+        {
+            "name": "Spring Reactor"
+        },
+        {
+            "name": "Spring Cloud"
         }
     ],
     "id": "24",
