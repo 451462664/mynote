@@ -17,6 +17,9 @@
         },
         {
             "name": "Mybatis"
+        },
+        {
+            "name": "Disruptor"
         }
     ],
     "id": "8",
