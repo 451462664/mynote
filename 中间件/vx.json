@@ -3,6 +3,21 @@
     "files": [
     ],
     "folders": [
+        {
+            "name": "xxl-job"
+        },
+        {
+            "name": "Tomcat"
+        },
+        {
+            "name": "Kafka"
+        },
+        {
+            "name": "Elasticsearch"
+        },
+        {
+            "name": "DBunit"
+        }
     ],
     "id": "7",
     "modified_time": "2021-12-21T01:46:24Z",

@@ -24,6 +24,8 @@ https://www.codeprj.com/blog/88f1751.html
 
 ### 记录 URL
 
+白板 https://excalidraw.com/
+最棒的设计模式 https://java-design-patterns.com/patterns
 清华大学开源镜像站 https://mirrors.tuna.tsinghua.edu.cn/
 idea 设置 https://mp.weixin.qq.com/s/LxJZEO6i3PT7iJeDRMg05A
 自考 https://zk.zjzs.net/Index/index.aspx
@@ -37,6 +39,7 @@ Linux 常用命令整理 https://segmentfault.com/a/1190000011854356
 Spring 中文手册 https://www.simviso.com/doc/spring-framework-5.2.x-cn/
 https://lfvepclr.gitbooks.io/spring-framework-5-doc-cn/content/
 http://shouce.jb51.net/spring/
+https://docs.gitcode.net/spring/guide/
 SpringMVC 中文手册 https://linesh.gitbooks.io/spring-mvc-documentation-linesh-translation/content/
 SpringBoot http://www.ityouknow.com/spring-boot.html
 SpringBoot https://spring.io/projects/spring-boot/#overview
